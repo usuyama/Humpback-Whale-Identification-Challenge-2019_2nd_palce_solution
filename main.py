@@ -322,11 +322,6 @@ def run_train(config):
                 run.log('loss_softmax', loss_softmax.item())
                 run.log('loss_triplet', loss_triplet.item())
 
-                run.log('i100_valid_loss', valid_loss[0])
-                run.log('i100_valid_top1', valid_loss[1])
-                run.log('i100_valid_top5', valid_loss[2])
-                run.log('i100_valid_prec', valid_loss[3])
-
                 log.write('\n')
             i=i+1
 
@@ -483,7 +478,7 @@ def main(config):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('data_root_dir')
+    parser.add_argument('--data_root_dir', default='../data')
 
     parser.add_argument('--fold_index', type=int, default = 0)
     parser.add_argument('--model', type=str, default='resnet101')
