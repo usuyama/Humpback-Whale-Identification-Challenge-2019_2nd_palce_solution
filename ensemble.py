@@ -113,6 +113,10 @@ if __name__ == '__main__':
         r'./models/seresnext101_fold0_pseudo_512_512/checkpoint/max_valid_model': 20,
     }
 
+    model_pred = {
+        r'./models/resnet101_fold0_pseudo_256_512/checkpoint/max_valid_model': 10
+    }
+
     thres =  0.185
     avg = read_models(model_pred, thres)
     avg, missing_ids = clalibrate_distribution(blend=avg)

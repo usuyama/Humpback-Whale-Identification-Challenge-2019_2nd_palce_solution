@@ -1,12 +1,31 @@
 from include import *
 import pandas as pd
 from process.augmentation import *
+import os
 
-PJ_DIR = r'/data1/shentao/Projects/Kaggle_Whale2019_2nd_place_solution'
-train_df = pd.read_csv('/data1/shentao/DATA/competitions/whale/train.csv')
-TRN_IMGS_DIR = '/data1/shentao/DATA/competitions/whale/train/'
-TST_IMGS_DIR = '/data1/shentao/DATA/competitions/whale/test/'
-LIST_DIR = PJ_DIR + r'/image_list'
+current_dir = os.path.dirname(os.path.abspath(__file__))
+PJ_DIR = os.path.join(current_dir, '..')
+LIST_DIR = os.path.join(PJ_DIR ,'image_list')
+
+DATA = {}
+train_df = None
+TRN_IMGS_DIR = None
+TST_IMGS_DIR = None
+
+def set_dirs(data_root_dir=None):
+    current_dir = os.path.dirname(os.path.abspath(__file__))
+
+    if data_root_dir is None:
+        data_root_dir = os.path.join(current_dir, '..', '..', 'data')
+
+    print("setting data_root_dir", data_root_dir)
+
+    global DATA
+    DATA['train_df'] = pd.read_csv(os.path.join(data_root_dir, 'train.csv'))
+    DATA['TRN_IMGS_DIR'] = os.path.join(data_root_dir, 'train')
+    DATA['TST_IMGS_DIR'] = os.path.join(data_root_dir, 'test')
+
+print(TRN_IMGS_DIR, TST_IMGS_DIR)
 
 def load_label_dict(label_list_path):
     f = open(label_list_path, 'r')
@@ -137,7 +156,3 @@ def load_CLASS_NAME():
         id_dict[id] = index
 
     return label_dict, id_dict
-
-
-
-

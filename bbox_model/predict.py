@@ -15,7 +15,7 @@ from bbox_model.helper.keypoint_encoder import KeypointEncoder
 import pandas as pd
 
 import os
-os.environ["CUDA_VISIBLE_DEVICES"] = "2"
+#os.environ["CUDA_VISIBLE_DEVICES"] = "2"
 
 def compute_keypoints(config, img0, net, encoder, doflip=False):
     img_h, img_w, _ = img0.shape

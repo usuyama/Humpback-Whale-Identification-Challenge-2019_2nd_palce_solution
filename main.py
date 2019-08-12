@@ -6,6 +6,10 @@ from process.data import *
 from process.triplet_sampler import *
 from loss.loss import  softmax_loss, TripletLoss, focal_OHEM
 
+import azureml.core.run
+# get hold of the current Azure-ML run
+run = azureml.core.run.Run.get_context()
+
 whale_id_num = 5004
 class_num = whale_id_num * 2
 
@@ -124,7 +128,10 @@ def run_train(config):
         config.model_name = config.model + '_fold' + str(config.fold_index) + \
                             '_'+str(config.image_h)+ '_'+str(config.image_w)
 
-    out_dir = os.path.join('./models/', config.model_name)
+    config.model_name += f"w{config.focal_w}_{config.softmax_w}_{config.triplet_w}_s1_{config.s1}m1_{config.m1}s2_{config.s2}"
+
+    out_dir = os.path.join(config.data_root_dir, 'models', config.model_name)
+    print("out_dir", out_dir)
     if not os.path.exists(out_dir):
         os.makedirs(out_dir)
     if not os.path.exists(os.path.join(out_dir,'checkpoint')):
@@ -306,9 +313,19 @@ def run_train(config):
             if i % 100 == 0:
                 log.write('%0.7f %5.1f %6.1f | %0.3f  %0.3f  %0.3f  (%0.3f)%s  | %0.3f  %0.3f  %0.3f  (%0.3f)  | %s' % (\
                              rate, iter, epoch,
-                             valid_loss[0], valid_loss[1], valid_loss[2], valid_loss[3],' ',
-                             batch_loss[0], batch_loss[1], batch_loss[2], batch_loss[3],
+                             valid_loss[0], valid_loss[1], valid_loss[2], valid_loss[3],' ', # loss, top1-acc, top5-acc, precision
+                             batch_loss[0], batch_loss[1], batch_loss[2], batch_loss[3],     # focal-loss+triplet-loss, softmax-loss, precision_new, precision_nonew?
                              time_to_str((timer() - start),'min')))
+
+                run.log('loss', loss.item())
+                run.log('loss_focal', loss_focal.item())
+                run.log('loss_softmax', loss_softmax.item())
+                run.log('loss_triplet', loss_triplet.item())
+
+                run.log('i100_valid_loss', valid_loss[0])
+                run.log('i100_valid_top1', valid_loss[1])
+                run.log('i100_valid_top5', valid_loss[2])
+                run.log('i100_valid_prec', valid_loss[3])
 
                 log.write('\n')
             i=i+1
@@ -336,6 +353,11 @@ def run_train(config):
         valid_loss = (valid_loss + valid_loss_flip) / 2.0
         net.train()
 
+        run.log('epoch_valid_loss', valid_loss[0])
+        run.log('epoch_valid_top1', valid_loss[1])
+        run.log('epoch_valid_top5', valid_loss[2])
+        run.log('epoch_valid_prec', valid_loss[3])
+
         if max_valid < valid_loss[3]:
             max_valid = valid_loss[3]
             print('save max valid!!!!!! : ' + str(max_valid))
@@ -355,7 +377,7 @@ def run_infer(config):
         config.model_name = config.model + '_fold' + str(config.fold_index) + \
                             '_'+str(config.image_h)+ '_'+str(config.image_w)
 
-    out_dir = os.path.join('./models/', config.model_name)
+    out_dir = os.path.join(cofing.data_root_dir, 'models', config.model_name)
 
     net = get_model(config.model, config)
     net = torch.nn.DataParallel(net)
@@ -446,18 +468,26 @@ def run_infer(config):
         prob_to_csv_top5(probs, test_ids, save_path)
 
 def main(config):
-    if config.mode == 'train':
+    if 'train' in config.mode:
         run_train(config)
 
-    if config.mode == 'test':
+    print("!!! done train !!!")
+
+    if 'test' in config.mode:
+        if 'train' in config.mode:
+            config.pretrained_model = 'max_valid_model.pth'
+            print("setting config.pretrained_model = max_valid_model.pth")
+
         with torch.no_grad():
             run_infer(config)
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
+    parser.add_argument('data_root_dir')
+
     parser.add_argument('--fold_index', type=int, default = 0)
     parser.add_argument('--model', type=str, default='resnet101')
-    parser.add_argument('--batch_size', type=int, default=128)
+    parser.add_argument('--batch_size', type=int, default=64) # original: 128
 
     parser.add_argument('--image_h', type=int, default=256)
     parser.add_argument('--image_w', type=int, default=512)
@@ -472,10 +502,7 @@ if __name__ == '__main__':
 
     parser.add_argument('--is_pseudo', type=bool, default=True)
 
-    # parser.add_argument('--mode', type=str, default='train', choices=['train', 'test'])
-    # parser.add_argument('--pretrained_model', type=str, default=None)
-    #
-    parser.add_argument('--mode', type=str, default='train', choices=['train', 'val','val_fold','test_classifier','test','test_fold'])
+    parser.add_argument('--mode', type=str, default='train', choices=['train', 'test', 'traintest'])
     parser.add_argument('--pretrained_model', type=str, default=None)
 
     parser.add_argument('--iter_save_interval', type=int, default=5)
@@ -483,7 +510,8 @@ if __name__ == '__main__':
 
     config = parser.parse_args()
     print(config)
+
+    from process import data_helper
+    data_helper.set_dirs(config.data_root_dir)
+
     main(config)
-
-
-

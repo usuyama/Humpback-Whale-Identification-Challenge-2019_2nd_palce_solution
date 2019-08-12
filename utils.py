@@ -50,7 +50,7 @@ def top_n_np(preds, labels):
 
     re = re / len(preds)
     for i in range(n):
-        top5.append(np.sum(labels == predicted[:, i])/ (1.0*len(labels)))
+        top5.append(np.sum(labels == predicted[:, i]) / (1.0 * len(labels)))
     return re, top5
 
 

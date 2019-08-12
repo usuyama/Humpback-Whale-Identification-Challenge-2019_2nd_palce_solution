@@ -24,8 +24,8 @@ class WhaleDataset(Dataset):
         self.class_num = len(self.label_dict)
         print(self.class_num)
 
-        self.train_image_path = TRN_IMGS_DIR
-        self.test_image_path = TST_IMGS_DIR
+        self.train_image_path = DATA['TRN_IMGS_DIR']
+        self.test_image_path = DATA['TST_IMGS_DIR']
         self.image_size = image_size
         self.fold_index = None
         self.set_mode(mode, fold_index)
@@ -53,13 +53,13 @@ class WhaleDataset(Dataset):
             print('set dataset mode: val')
 
         elif self.mode == 'test':
-            self.test_list = os.listdir(TST_IMGS_DIR)
+            self.test_list = os.listdir(DATA['TST_IMGS_DIR'])
             self.test_list = [tmp for tmp in self.test_list if '.jpg' in tmp]
             self.num_data = len(self.test_list)
             print('set dataset mode: test')
 
         elif self.mode == 'test_train':
-            self.test_list = os.listdir(TRN_IMGS_DIR)
+            self.test_list = os.listdir(DATA['TRN_IMGS_DIR'])
             self.test_list = [tmp for tmp in self.test_list if '.jpg' in tmp]
             self.num_data = len(self.test_list)
             print('set dataset mode: test')
