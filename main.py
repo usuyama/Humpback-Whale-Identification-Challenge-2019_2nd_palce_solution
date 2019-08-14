@@ -372,7 +372,7 @@ def run_infer(config):
         config.model_name = config.model + '_fold' + str(config.fold_index) + \
                             '_'+str(config.image_h)+ '_'+str(config.image_w)
 
-    out_dir = os.path.join(cofing.data_root_dir, 'models', config.model_name)
+    out_dir = os.path.join(config.data_root_dir, 'models', config.model_name)
 
     net = get_model(config.model, config)
     net = torch.nn.DataParallel(net)
